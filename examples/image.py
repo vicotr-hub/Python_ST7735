@@ -1,66 +1,37 @@
-# Copyright (c) 2014 Adafruit Industries
-# Author: Tony DiCola
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
 from PIL import Image
+import board
+import digitalio
+import adafruit_st7735r
 
-import ST7735 as TFT
-import Adafruit_GPIO as GPIO
-import Adafruit_GPIO.SPI as SPI
+# Display configuration (change pins if your wiring differs)
+TFT_DC = digitalio.DigitalInOut(board.D24)
+TFT_RST = digitalio.DigitalInOut(board.D25)
+TFT_CS = digitalio.DigitalInOut(board.CE0)  # usually CE0 for SPI device 0
 
+# Initialize SPI bus
+spi = board.SPI()
 
-WIDTH = 128
-HEIGHT = 160
-SPEED_HZ = 4000000
+# Initialize display
+disp = adafruit_st7735r.ST7735R(
+    spi,
+    cs=TFT_CS,
+    dc=TFT_DC,
+    rst=TFT_RST,
+    width=128,
+    height=160,
+    rotation=90
+)
 
+disp.fill(0)  # Clear display (fill black)
 
-# Raspberry Pi configuration.
-DC = 24
-RST = 25
-SPI_PORT = 0
-SPI_DEVICE = 0
+print("Loading image...")
+image = Image.open("cat.jpg")
 
-# BeagleBone Black configuration.
-# DC = 'P9_15'
-# RST = 'P9_12'
-# SPI_PORT = 1
-# SPI_DEVICE = 0
+# Resize image to display size
+image = image.resize((128, 160))
 
-# Create TFT LCD display class.
-disp = TFT.ST7735(
-    DC,
-    rst=RST,
-    spi=SPI.SpiDev(
-        SPI_PORT,
-        SPI_DEVICE,
-        max_speed_hz=SPEED_HZ))
+# Show image on the display
+disp.image(image)
 
-# Initialize display.
-disp.begin()
+print("Done")
 
-# Load an image.
-print('Loading image...')
-image = Image.open('cat.jpg')
-
-# Resize the image and rotate it so matches the display.
-image = image.rotate(90).resize((WIDTH, HEIGHT))
-
-# Draw the image on the display hardware.
-print('Drawing image')
-disp.display(image)
